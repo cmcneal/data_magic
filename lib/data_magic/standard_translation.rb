@@ -256,24 +256,37 @@ module DataMagic
     end
 
     #
-    # return a value based on a mast
+    # return a value based on a mask
     # The # character will be replaced with a number
     # The A character will be replaced with an upper case letter
     # The a character will be replaced with a lower case letter
-    #
+    # If the mask string starts with a ~ then treat this as a "multi mask"
+    #   After the first ~ the next characters are treated as seperators in the result.
+    #   This means that a value like test: ~mask "~, ~company_name~street_address"
+    #   Will result in something like "Company XYZ, 123 Main Street"
     def mask(value)
       result = ''
-      value.each_char do |ch|
-        case ch
-        when '#' then result += randomize(0..9).to_s
-        when 'A' then result += ('A'..'Z').to_a[rand(26)]
-        when 'a' then result += ('a'..'z').to_a[rand(26)]
-        else result += ch
+      
+      if value.include?('~')
+        translations = value.split('~')
+        translations.shift
+        separator = translations.shift
+        translations.each do |translation|
+          result += separator
+          result += eval translation
+        end
+      else
+        value.each_char do |ch|
+          case ch
+          when '#' then result += randomize(0..9).to_s
+          when 'A' then result += ('A'..'Z').to_a[rand(26)]
+          when 'a' then result += ('a'..'z').to_a[rand(26)]
+          else result += ch
+          end
         end
       end
       result
     end
-    alias_method :dm_mask, :mask
 
 
 
